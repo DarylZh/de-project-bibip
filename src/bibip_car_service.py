@@ -20,7 +20,6 @@ class CarService:
         with open(self.cars_file, 'a') as f:
             line = f"{car.vin};{car.model};{car.price};{car.date_start};{car.status}\n"
             f.write(line)
-
         # Обновление индекса
         self.update_index(self.cars_index_file, car.vin, self.get_line_count(self.cars_file) - 1)
         return car
@@ -30,7 +29,6 @@ class CarService:
         with open(self.models_file, 'a') as f:
             line = f"{model.id};{model.name};{model.brand}\n"
             f.write(line)
-
         # Обновление индекса
         self.update_index(self.models_index_file, model.id, self.get_line_count(self.models_file) - 1)
         return model
@@ -102,62 +100,36 @@ class CarService:
             return 0
         with open(file_path, 'r') as f:
             return sum(1 for _ in f)
- 
-# Пример использования
-if __name__ == "__main__":
-    service = CarService('path_to_directory')
-
-    # Пример продажи автомобиля
-    sale = Sale('123#4321', '1HGBH41JXMN109186', 99999.99, '2024-10-01')
-    service.sell_car(sale)
   
     # Задание 3. Доступные к продаже
-    def get_cars(self, status: CarStatus) -> list[Car]:
-        raise NotImplementedError
- 
 class CarStatus:
     AVAILABLE = "available"
     SOLD = "sold"
     # другие статусы...
 
 class Car:
-    def __init__(self, vin, model, status):
+    def __init__(self, vin, model, price, date_start, status):
         self.vin = vin
         self.model = model
+        self.price = price
+        self.date_start = date_start
         self.status = status
 
     def __repr__(self):
         return f"Car(vin={self.vin}, model={self.model}, status={self.status})"
 
 class CarDealership:
-    def __init__(self, cars):
-        self.cars = cars  # список автомобилей
+    def __init__(self, cars_file: str):
+        self.cars_file = cars_file  # Путь к файлу с данными о машинах
 
-    def get_cars(self, status: CarStatus) -> list[Car]:
-        available_cars = [car for car in self.cars if car.status == status.AVAILABLE]
-        return sorted(available_cars, key=lambda car: car.vin)
-
-# Пример использования
-if __name__ == "__main__":
-    cars = [
-        Car("1HGCM82633A123456", "Honda Accord", CarStatus.AVAILABLE),
-        Car("1HGCM82633A654321", "Honda Civic", CarStatus.SOLD),
-        Car("1HGCM82633A987654", "Toyota Camry", CarStatus.AVAILABLE),
-    ]
-
-    dealership = CarDealership(cars)
-    available_cars = dealership.get_cars(CarStatus)
-    print(available_cars) 
- 
-    # Задание 3. Вывод машин, доступных к продаже
     def get_cars(self, status: CarStatus) -> list[Car]:
         available_cars = []
         with open(self.cars_file, 'r') as f:
             for line in f:
                 vin, model, price, date_start, car_status = line.strip().split(';')
                 if car_status == status.AVAILABLE:
-                    available_cars.append(Car(vin, int(model), price, date_start, car_status))
-        return sorted(available_cars, key=lambda car: car.vin)
+                    available_cars.append(Car(vin, int(model), Decimal(price), date_start, car_status))
+        return available_cars  # Возвращаем без сортировки
 
     # Задание 4. Вывод детальной информации
     def get_car_info(self, vin: str) -> CarFullInfo | None:
@@ -251,9 +223,6 @@ if __name__ == "__main__":
     else:
         print("Автомобиль с указанным VIN не найден.")
 
-# Пример использования
-update_vin('OLD_VIN123', 'NEW_VIN456')
-  
     # Задание 6. Удаление продажи
     def revert_sale(self, sales_number: str) -> None:
         # Читаем данные о машинах и продажах
@@ -352,8 +321,3 @@ update_vin('OLD_VIN123', 'NEW_VIN456')
     def read_models(self, file_path):
         models
         
-# Пример использования
-top_models = top_models_by_sales()
-for model in top_models:
-    print(f"Модель: {model.car_model_name}, Бренд: {model.brand}, Количество продаж: {model.sales_count}")
- 
