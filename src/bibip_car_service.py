@@ -1,78 +1,88 @@
-import os
-from datetime import datetime
-from decimal import Decimal
-from models import Car, CarFullInfo, CarStatus, Model, ModelSaleStats, Sale
+import os 
+from datetime import datetime 
+from decimal import Decimal 
+from models import Car, CarFullInfo, CarStatus, Model, ModelSaleStats, Sale 
 
-
-class CarService:
-    def __init__(self, root_directory_path: str) -> None:
-        self.root_directory_path = root_directory_path
-        self.cars_file = os.path.join(root_directory_path, 'cars.txt')
-        self.cars_index_file = os.path.join(root_directory_path, 'cars_index.txt')
-        self.models_file = os.path.join(root_directory_path, 'models.txt')
-        self.models_index_file = os.path.join(root_directory_path, 'models_index.txt')
-        self.sales_file = os.path.join(root_directory_path, 'sales.txt')
+class CarService: 
+    def __init__(self, root_directory_path: str) -> None: 
+        self.root_directory_path = root_directory_path 
+        self.cars_file = os.path.join(root_directory_path, 'cars.txt') 
+        self.cars_index_file = os.path.join(root_directory_path, 'cars_index.txt') 
+        self.models_file = os.path.join(root_directory_path, 'models.txt') 
+        self.models_index_file = os.path.join(root_directory_path, 'models_index.txt') 
+        self.sales_file = os.path.join(root_directory_path, 'sales.txt') 
         self.sales_index_file = os.path.join(root_directory_path, 'sales_index.txt')
 
-    # Задание 1. Сохранение автомобилей и моделей
-    def add_car(self, car: Car) -> Car:
-        # Запись автомобиля в cars.txt
-        with open(self.cars_file, 'a') as f:
-            line = f"{car.vin};{car.model};{car.price};{car.date_start};{car.status}\n"
-            f.write(line)
-        # Обновление индекса
-        self.update_index(self.cars_index_file, str(car.vin), self.get_line_count(self.cars_file) - 1)
-        return car
-
-    def add_model(self, model: Model) -> Model:
-        # Запись модели в models.txt
-        with open(self.models_file, 'a') as f:
-            line = f"{model.id};{model.name};{model.brand}\n"
-            f.write(line)
-        # Обновление индекса
-        self.update_index(self.models_index_file, str(model.id), self.get_line_count(self.models_file) - 1)
-        return model
-
-    def update_index(self, index_file: str, key: str, line_number: int) -> None:
-        # Чтение существующего индекса
-        index_data = []
-        if os.path.exists(index_file):
-            with open(index_file, 'r') as f:
-                index_data = [line.strip().split(';') for line in f]
-
-        # Добавление новой записи
-        index_data.append((key, line_number))
-
-        # Сортировка индекса
-        index_data.sort(key=lambda x: x[0])
-
-        # Запись обновленного индекса обратно в файл
-        with open(index_file, 'w') as f:
-            for key, line_num in index_data:
-                f.write(f"{key};{line_num}\n")
-
-    def get_line_count(self, file_path: str) -> int:
-        # Получение количества строк в файле
-        with open(file_path, 'r') as f:
-            return sum(1 for _ in f)
-
-    # Задание 2. Сохранение продаж 
-    def sell_car(self, sale: Sale) -> Car: 
-    # 1. Запись продажи в sales.txt 
-        with open(self.sales_file, 'a') as f: 
-            line = f"{sale.sales_number};{sale.car_vin};{sale.cost};{sale.sales_date}\n" 
+ # Задание 1. Сохранение автомобилей и моделей 
+    def add_car(self, car: Car) -> Car: 
+        # Запись автомобиля в cars.txt 
+        with open(self.cars_file, 'a') as f: 
+            line = f"{car.vin};{car.model};{car.price};{car.date_start};{car.status}\n" 
             f.write(line) 
+        # Обновление индекса 
+        self.update_index(self.cars_index_file, str(car.vin), self.get_line_count(self.cars_file) - 1) 
+        return car 
 
-    # 2. Обновление индекса продаж 
-        self.update_index(self.sales_index_file, str(sale.sales_number), self.get_line_count(self.sales_file) - 1) 
+    def add_model(self, model: Model) -> Model: 
+        # Запись модели в models.txt 
+        with open(self.models_file, 'a') as f: 
+            line = f"{model.id};{model.name};{model.brand}\n" 
+            f.write(line) 
+        # Обновление индекса 
+        self.update_index(self.models_index_file, str(model.id), self.get_line_count(self.models_file) - 1) 
+        return model 
 
-    # 3. Найти автомобиль в cars.txt 
-        car_line_number = self.get_line_number_by_vin(sale.car_vin) 
-        if car_line_number is not None: 
-        # 4a. Чтение автомобиля из cars.txt 
-            with open(self.cars_file, 'r') as f: 
-                lines = f.readlines() 
-                car_line = lines[car_line_number].strip().split(';') 
+    def update_index(self, index_file: str, key: str, line_number: int) -> None: 
+        # Чтение существующего индекса 
+        index_data = [] 
+        if os.path.exists(index_file): 
+            with open(index_file, 'r') as f: 
+                index_data = [line.strip().split(';') for line in f] 
+
+        # Добавление новой записи 
+        index_data.append((key, line_number)) 
+
+        # Сортировка индекса 
+        index_data.sort(key=lambda x: x[0]) 
+
+        # Запись обновленного индекса обратно в файл 
+        with open(index_file, 'w') as f: 
+            for key, line_num in index_data: 
+                f.write(f"{key};{line_num}\n") 
+
+    def get_line_count(self, file_path: str) -> int: 
+        # Получение количества строк в файле 
+        with open(file_path, 'r') as f: 
+            return sum(1 for _ in f) 
+
+    def get_line_number_by_vin(self, vin: str) -> int | None:
+        # Получение номера строки автомобиля по VIN
+        if os.path.exists(self.cars_index_file):
+            with open(self.cars_index_file, 'r') as f:
+                for line in f:
+                    key, line_num = line.strip().split(';')
+                    if key == vin:
+                        return int(line_num)
+        return None  # Если VIN не найден
+
+    # Задание 2. Сохранение продаж  
+    def sell_car(self, sale: Sale) -> Car:  
+        # 1. Запись продажи в sales.txt  
+        with open(self.sales_file, 'a') as f:  
+            line = f"{sale.sales_number};{sale.car_vin};{sale.cost};{sale.sales_date}\n"  
+            f.write(line)  
+
+        # 2. Обновление индекса продаж  
+        self.update_index(self.sales_index_file, str(sale.sales_number), self.get_line_count(self.sales_file) - 1)  
+
+        # 3. Найти автомобиль в cars.txt  
+        car_line_number = self.get_line_number_by_vin(sale.car_vin)  
+        if car_line_number is not None:
+            raise ValueError(f"Car with VIN {sale.car_vin} not found")
+        # 4a. Чтение автомобиля из cars.txt  
+        with open(self.cars_file, 'r') as f:
+            lines = f.readlines()  
+            car_line = lines[car_line_number].strip().split(';') 
 
         # 4b. Обновление статуса автомобиля 
             car_line[4] = 'sold' 
@@ -82,9 +92,9 @@ class CarService:
             with open(self.cars_file, 'w') as f:
                 f.writelines(lines)
 
-    # Возвращаем объект автомобиля (возможно, нужно создать его из car_line)
-        return self.parse_car(car_line)  # Предполагается, что есть метод parse_car для разбора строки
-  
+    # Возвращаем объект автомобиля
+            return self.parse_car(car_line)
+        
     # Задание 3. Доступные к продаже
 class CarStatus:
     AVAILABLE = "available"
@@ -104,69 +114,67 @@ class Car:
 
     def get_cars(self, status: CarStatus) -> list[Car]:
         available_cars = []
+        if not os.path.exists(self.cars_file):
+            return available_cars
+            
         with open(self.cars_file, 'r') as f:
             for line in f:
-                vin, model, price, date_start, car_status = line.strip().split(';')
-                if car_status == status.AVAILABLE:
-                    available_cars.append(Car(vin, int(model), Decimal(price), date_start, car_status))
-        return available_cars  # Возвращаем без сортировки
+                parts = line.strip().split(';')
+                if len(parts) >= 5 and parts[4] == status.value:
+                    available_cars.append(self.parse_car(parts))
+        return available_cars
 
     # Задание 4. Вывод детальной информации
     def get_car_info(self, vin: str) -> CarFullInfo | None:
-        # Читаем данные об автомобиле
-        with open(self.cars_index_file, 'r') as index_file:
-            for line in index_file:
-                index_data = line.strip().split(';')
-                if index_data[0] == vin:
-                    car_line_number = int(index_data[1])  # Номер строки в cars.txt
-                    break
-            else:
-                return None  # Если VIN не найден
+        # Находим автомобиль
+        car_line_number = self.get_line_number_by_vin(vin)
+        if car_line_number is None:
+            return None
 
-        # Читаем данные из cars.txt
-        with open(self.cars_file, 'r') as cars_file:
-            car_data = cars_file.readlines()[car_line_number].strip().split(';')
+        with open(self.cars_file, 'r') as f:
+            lines = f.readlines()
+            car_line = lines[car_line_number].strip().split(';')
+            car = self.parse_car(car_line)
 
-        # Читаем данные о модели
-        model_id = car_data[1]
-        with open(self.models_index_file, 'r') as model_index_file:
-            for line in model_index_file:
-                model_index_data = line.strip().split(';')
-                if model_index_data[0] == model_id:
-                    model_line_number = int(model_index_data[1])
-                    break
-
-        # Читаем данные из models.txt
-        with open(self.models_file, 'r') as models_file:
-            model_data = models_file.readlines()[model_line_number].strip().split(';')
-
-        # Проверяем статус автомобиля
-        car_status = car_data[4]
-        sales_date = None
-        sales_cost = None
-
-        if car_status == 'sold':
-            # Читаем данные о продаже
-            with open(self.sales_file, 'r') as sales_file:
-                for line in sales_file:
-                    sales_data = line.strip().split(';')
-                    if sales_data[1] == vin:
-                        sales_date = sales_data[2]  # Дата продажи
-                        sales_cost = sales_data[3]  # Цена продажи
+        # Находим модель автомобиля
+        model_id = car.model
+        model = None
+        if os.path.exists(self.models_index_file):
+            with open(self.models_index_file, 'r') as f:
+                for line in f:
+                    parts = line.strip().split(';')
+                    if parts[0] == str(model_id):
+                        model_line_number = int(parts[1])
+                        with open(self.models_file, 'r') as mf:
+                            model_lines = mf.readlines()
+                            model_data = model_lines[model_line_number].strip().split(';')
+                            model = Model(
+                                id=int(model_data[0]),
+                                name=model_data[1],
+                                brand=model_data[2]
+                            )
                         break
 
-        # Возвращаем объект CarFullInfo
-        return CarFullInfo(
-            vin=vin,
-            model_name=model_data[1],  # Имя модели
-            model_brand=model_data[2],  # Бренд модели
-            price=float(car_data[2]),  # Закупочная стоимость
-            date_start=car_data[3],  # Дата поступления
-            status=car_status,
-            sales_date=sales_date,
-            sales_cost=sales_cost
-        )
+        # Находим продажи для этого автомобиля
+        sales = []
+        if os.path.exists(self.sales_file):
+            with open(self.sales_file, 'r') as f:
+                for line in f:
+                    parts = line.strip().split(';')
+                    if parts[1] == vin:
+                        sales.append(Sale(
+                            sales_number=int(parts[0]),
+                            car_vin=parts[1],
+                            cost=Decimal(parts[2]),
+                            sales_date=parts[3]
+                        ))
 
+        return CarFullInfo(
+            car=car,
+            model=model,
+            sales=sales
+        )
+    
     # Задание 5. Обновление ключевого поля
 def update_vin(self, vin: str, new_vin: str) -> None:
     # Читаем индекс
