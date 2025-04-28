@@ -1,44 +1,9 @@
 from decimal import Decimal
 from typing import List, Optional
-
-class CarStatus:
-    AVAILABLE = "available"
-    SOLD = "sold"
-
-class Model:
-    def __init__(self, id: int, name: str, brand: str):
-        self.id = id
-        self.name = name
-        self.brand = brand
-
-class Car:
-    def __init__(self, vin: str, model_id: int, price: Decimal, date_start: str, status: str = CarStatus.AVAILABLE):
-        self.vin = vin
-        self.model_id = model_id
-        self.price = price
-        self.date_start = date_start
-        self.status = status
-
-class Sale:
-    def __init__(self, sales_number: int, car_vin: str, cost: Decimal, sales_date: str):
-        self.sales_number = sales_number
-        self.car_vin = car_vin
-        self.cost = cost
-        self.sales_date = sales_date
-
-class CarFullInfo:
-    def __init__(self, vin: str, car_model_name: str, car_model_brand: str, price: Decimal, date_start: str, status: str, sales_date: Optional[str], sales_cost: Optional[Decimal]):
-        self.vin = vin
-        self.car_model_name = car_model_name
-        self.car_model_brand = car_model_brand
-        self.price = price
-        self.date_start = date_start
-        self.status = status
-        self.sales_date = sales_date
-        self.sales_cost = sales_cost
+from models import Car, Model, Sale, CarFullInfo, CarStatus
 
 class CarService:
-    def __init__(self) -> None:
+    def __init__(self, rood_dir) -> None:
         self.models: List[Model] = []  # Список для хранения моделей
         self.cars: List[Car] = []       # Список для хранения автомобилей
         self.sales: List[Sale] = []      # Список для хранения продаж
@@ -90,15 +55,58 @@ class CarService:
     def get_cars_by_status(self, status: str) -> List[Car]:
         return [car for car in self.cars if car.status == status]
 
-    def top_models_by_sales(self) -> List[tuple[str, int]]:
-        sales_count = {}
+    def update_vin(self, old_vin: str, new_vin: str) -> None:
+        car = next((car for car in self.cars if car.vin == old_vin), None)
+        if car is None:
+            raise ValueError(f"Car with VIN {old_vin} not found")
+        
+        # Обновление VIN номера
+        car.vin = new_vin
+
+        # Обновление всех продаж, связанных с этим автомобилем
         for sale in self.sales:
-            model_id = sale.car_vin  # Предполагаем, что VIN соответствует модели
+            if sale.car_vin == old_vin:
+                sale.car_vin = new_vin
+
+    def revert_sale(self, sale_id: int) -> None:
+        sale = next((sale for sale in self.sales if sale.id == sale_id), None)
+        if sale is None:
+            raise ValueError(f"Sale with ID {sale_id} not found")
+
+        # Удаление продажи из списка
+        self.sales.remove(sale)
+
+        # Обновление статуса автомобиля на "Доступен"
+        car = next((car for car in self.cars if car.vin == sale.car_vin), None)
+        if car:
+            car.status = CarStatus.AVAILABLE  # Предполагаем, что статус "Доступен"
+            
+    def top_models_by_sales(self) -> List[ModelSaleStats]:
+    sales_count = {}
+    
+        # Чтение данных о продажах
+        for sale in self.sales:
+            model_id = sale.car_vin  # Предполагается, что VIN соответствует модели
             sales_count[model_id] = sales_count.get(model_id, 0) + 1
 
-        # Сортировка по количеству продаж
-        sorted_sales = sorted(sales_count.items(), key=lambda item: item[1], reverse=True)
+        # Получение списка моделей с количеством продаж
+        sorted_sales = sorted(sales_count.items(), key=lambda item: (-item[1], self.get_model_price(item[0])))
 
         # Берем топ-3 модели
-        return sorted_sales[:3]
+        top_models = []
+        for model_id, count in sorted_sales[:3]:
+            model = self.get_model_by_id(model_id)  # Метод для получения модели по ID
+            if model:
+                
+    top_models.append(ModelSaleStats(car_model_name=model.name, brand=model.brand, sales_number=count))
 
+        return top_models
+
+    def get_model_price(self, model_id: str) -> Decimal:
+        # Метод для получения цены модели по ID
+        model = next((m for m in self.models if m.id == model_id), None)
+        return model.price if model else Decimal(0)
+
+    def get_model_by_id(self, model_id: str) -> Optional[Model]:
+        # Метод для получения модели по ID
+        return next((m for m in self.models if m.id == model_id), None)
