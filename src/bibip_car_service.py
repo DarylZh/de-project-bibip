@@ -80,33 +80,35 @@ class CarService:
         car = next((car for car in self.cars if car.vin == sale.car_vin), None)
         if car:
             car.status = CarStatus.available  # Предполагаем, что статус "Доступен"
-            
-    def top_models_by_sales(self) -> List[ModelSaleStats]:
-        sales_count = {}
+
+     def top_models_by_sales(self) -> list[ModelSaleStats]:
+
+            sales_count = {}
+
+            for sale in self.sales:
+
+                car = next(
+                    (car for car in self.cars if car.vin == sale.car_vin), None)
+                if car:
+                    model = next(
+                        (model for model in self.models if model.id == car.model), None)
+                    if model:
+                        if model.id not in sales_count:
+                            sales_count[model.id] = {
+                                'name': model.name, 'brand': model.brand, 'count': 0}
+                        sales_count[model.id]['count'] += 1
+
+            # Преобразуем словарь в список
+
+            top_models = [
+                ModelSaleStats(
+                    car_model_name=data['name'], brand=data['brand'], sales_number=data['count'])
+                for data in sales_count.values()
+            ]
+
+            # Сортируем по количеству продаж и по имени модели
+
+            top_models.sort(key=lambda x: (-x.sales_number, x.car_model_name))
+
+            return top_models[:3]       
     
-        # Чтение данных о продажах
-        for sale in self.sales:
-            model_id = sale.car_vin  # Предполагается, что VIN соответствует модели
-            sales_count[model_id] = sales_count.get(model_id, 0) + 1
-
-        # Получение списка моделей с количеством продаж
-        sorted_sales = sorted(sales_count.items(), key=lambda item: (-item[1], self.get_model_price(item[0])))
-
-        # Берем топ-3 модели
-        top_models = []
-        for model_id, count in sorted_sales[:3]:
-            model = self.get_model_by_id(model_id)  # Метод для получения модели по ID
-            if model:
-                
-                top_models.append(ModelSaleStats(car_model_name=model.name, brand=model.brand, sales_number=count))
-
-        return top_models
-
-    def get_model_price(self, model_id: str) -> Decimal:
-        # Метод для получения цены модели по ID
-        model = next((m for m in self.models if m.id == model_id), None)
-        return model.price if model else Decimal(0)
-
-    def get_model_by_id(self, model_id: str) -> Optional[Model]:
-        # Метод для получения модели по ID
-        return next((m for m in self.models if m.id == model_id), None)
