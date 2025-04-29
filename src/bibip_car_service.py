@@ -1,6 +1,6 @@
 from decimal import Decimal
 from typing import List, Optional
-from models import Car, Model, Sale, CarFullInfo, CarStatus
+from models import Car, Model, Sale, CarFullInfo, CarStatus, ModelSaleStats
 
 class CarService:
     def __init__(self, rood_dir) -> None:
@@ -26,7 +26,7 @@ class CarService:
         self.sales.append(sale)
 
         # Обновление статуса автомобиля
-        car.status = CarStatus.SOLD
+        car.status = CarStatus.sold
 
         return car
 
@@ -35,7 +35,7 @@ class CarService:
         if not car:
             return None
 
-        model = next((model for model in self.models if model.id == car.model_id), None)
+        model = next((model for model in self.models if model.id == car.model), None)
         sales_for_car = [sale for sale in self.sales if sale.car_vin == vin]
 
         sales_date = sales_for_car[0].sales_date if sales_for_car else None
@@ -52,7 +52,7 @@ class CarService:
             sales_cost=sales_cost,
         )
 
-    def get_cars_by_status(self, status: str) -> List[Car]:
+    def get_cars(self, status: str) -> List[Car]:
         return [car for car in self.cars if car.status == status]
 
     def update_vin(self, old_vin: str, new_vin: str) -> None:
@@ -69,7 +69,7 @@ class CarService:
                 sale.car_vin = new_vin
 
     def revert_sale(self, sale_id: int) -> None:
-        sale = next((sale for sale in self.sales if sale.id == sale_id), None)
+        sale = next((sale for sale in self.sales if sale.sales_number == sale_id), None)
         if sale is None:
             raise ValueError(f"Sale with ID {sale_id} not found")
 
@@ -79,10 +79,10 @@ class CarService:
         # Обновление статуса автомобиля на "Доступен"
         car = next((car for car in self.cars if car.vin == sale.car_vin), None)
         if car:
-            car.status = CarStatus.AVAILABLE  # Предполагаем, что статус "Доступен"
+            car.status = CarStatus.available  # Предполагаем, что статус "Доступен"
             
     def top_models_by_sales(self) -> List[ModelSaleStats]:
-    sales_count = {}
+        sales_count = {}
     
         # Чтение данных о продажах
         for sale in self.sales:
@@ -98,7 +98,7 @@ class CarService:
             model = self.get_model_by_id(model_id)  # Метод для получения модели по ID
             if model:
                 
-    top_models.append(ModelSaleStats(car_model_name=model.name, brand=model.brand, sales_number=count))
+                top_models.append(ModelSaleStats(car_model_name=model.name, brand=model.brand, sales_number=count))
 
         return top_models
 
